@@ -1,6 +1,6 @@
 package rocks.inspectit.releaseplugin;
 
-import java.io.UnsupportedEncodingException;
+import java.io.PrintStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.UnsupportedCharsetException;
@@ -8,6 +8,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import hudson.model.BuildListener;
+import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
 import org.apache.http.auth.AuthScope;
@@ -32,6 +34,7 @@ import org.apache.http.impl.client.HttpClients;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
+import org.apache.http.util.EntityUtils;
 
 /**
  * Wrapper class around the apache http client, allows sending and recieving requests / responses in JSON format. 
@@ -67,7 +70,8 @@ public class JsonHTTPClientWrapper {
 	 */
 	private CredentialsProvider credsProvider;
 
-	
+	private PrintStream logger = null;
+
 	/**
 	 * Initializes a new connection with the given connection information.
 	 * @param url the url of the server
@@ -75,11 +79,14 @@ public class JsonHTTPClientWrapper {
 	 * @param password the password
 	 * @param proxy the proxy to use
 	 */
-	public JsonHTTPClientWrapper(String url, String user, String password, String proxy) {
+	public JsonHTTPClientWrapper(String url, String user, String password, String proxy, BuildListener... listener) {
 		this.url = url;
 		this.password = password;
 		this.user = user;
 		this.proxy = proxy;
+		if(listener.length > 0) {
+			logger = listener[0].getLogger();
+		}
 		connect();
 	}
 	
@@ -138,9 +145,31 @@ public class JsonHTTPClientWrapper {
 			context.setCredentialsProvider(credsProvider);
 			context.setAuthCache(authCache);
 
+			try {
+				logger.println("Request URI is : " + request.getURI().toString());
+				logger.println("Request body is : " + request.getRequestLine().toString());
+			} catch (Exception e) {
+				//Nothing to do
+			}
+
 			HttpResponse response = client.execute(request, context);
-			String jsonResponse = new BasicResponseHandler()
-					.handleResponse(response);
+
+			HttpEntity entity = response.getEntity();
+
+			// Read the contents of an entity and return it as a String.
+			String content = EntityUtils.toString(entity);
+
+			try {
+				logger.println("CONTENT START - Status code " + response.getStatusLine().getStatusCode() + " . Reason phrase - " +response.getStatusLine().getReasonPhrase());
+				logger.println(content);
+				logger.println("CONTENT END");
+			} catch (Exception e) {
+				//Nothing to do
+			}
+
+
+			String jsonResponse = content;//new BasicResponseHandler().handleResponse(response);
+
 			if (jsonResponse != null) {
 				return new JsonParser().parse(jsonResponse);
 			} else {

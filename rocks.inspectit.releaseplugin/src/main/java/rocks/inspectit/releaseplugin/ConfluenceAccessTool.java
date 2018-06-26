@@ -1,5 +1,6 @@
 package rocks.inspectit.releaseplugin;
 
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -8,6 +9,7 @@ import java.util.Map;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import hudson.model.BuildListener;
 
 /**
  * Type encapsulating the REST-API based access to a confluence Server. Allows
@@ -24,6 +26,8 @@ public class ConfluenceAccessTool {
 	 */
 	private JsonHTTPClientWrapper client;
 
+	private PrintStream logger = null;
+
 	/**
 	 * Initializes a new connection with the given connection information.
 	 * @param url the url of confluence
@@ -31,9 +35,10 @@ public class ConfluenceAccessTool {
 	 * @param password the password
 	 * @param proxy the proxy to use for building the connection
 	 */
-	public ConfluenceAccessTool(String url, String user, String password, String proxy) {
+	public ConfluenceAccessTool(String url, String user, String password, String proxy, BuildListener listener) {
 		super();
-		client = new JsonHTTPClientWrapper(url, user, password, proxy);
+		logger = listener.getLogger();
+		client = new JsonHTTPClientWrapper(url, user, password, proxy, listener);
 	}
 
 
@@ -122,10 +127,20 @@ public class ConfluenceAccessTool {
 		body.add("storage", storage);
 		
 		page.add("body", body);
-		
-		client.postJson("/rest/api/content", page);
-			
 
+		logger.println("HTML CONTENT START");
+		logger.println(htmlContent);
+		logger.println("HTML CONTENT END");
+
+		logger.println("BODY CONTENT START");
+		logger.println(body);
+		logger.println("BODY CONTENT END");
+
+		logger.println("PAGE CONTENT START");
+		logger.println(page);
+		logger.println("PAGE CONTENT END");
+
+		client.postJson("/rest/api/content", page);
 	}
 
 }

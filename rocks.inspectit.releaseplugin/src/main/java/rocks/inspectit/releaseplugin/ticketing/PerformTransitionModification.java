@@ -100,7 +100,9 @@ public class PerformTransitionModification extends TicketModification {
 		}
 		
 		if (id == -1) {
-			throw new RuntimeException("The transition with the name \"" + transitionName + "\" is either non existent or not accessible for the Ticket " + ticketKey);
+			//throw new RuntimeException("The transition with the name \"" + transitionName + "\" is either non existent or not accessible for the Ticket " + ticketKey);
+			logger.println("The transition with the name \"" + transitionName + "\" is either non existent or not accessible for the Ticket " + ticketKey);
+			return;
 		}
 		
 		TransitionInput input;
@@ -111,7 +113,6 @@ public class PerformTransitionModification extends TicketModification {
 		}
 		
 		jira.performTransition(issue, input);
-		
 		
 	}
 }

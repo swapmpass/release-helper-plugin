@@ -289,7 +289,7 @@ public class JIRAAccessTool {
 		
 		Set<String> issueTypesSet = new HashSet<String>();
 		for (Issue is : issuesToShow) {
-			issueTypesSet.add(is.getIssueType().getName());
+			issueTypesSet.add(is.getIssueType().getName().replaceAll("&", "and"));
 		}
 		ArrayList<String> sortedIssueTypes = new ArrayList<String>(issueTypesSet);
 		sortedIssueTypes.sort(String.CASE_INSENSITIVE_ORDER);

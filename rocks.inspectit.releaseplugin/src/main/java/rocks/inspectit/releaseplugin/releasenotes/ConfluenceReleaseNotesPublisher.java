@@ -45,9 +45,6 @@ public class ConfluenceReleaseNotesPublisher extends AbstractJIRAConfluenceActio
 	 */
 	private String parentPageTitle;
 	
-	
-
-
 	/**
 	 * 
 	 * Databound constructor, called by Jenkins.
@@ -97,7 +94,7 @@ public class ConfluenceReleaseNotesPublisher extends AbstractJIRAConfluenceActio
 		ConfluenceCredentials confCred = getConfluenceCredentials();
 		
 		JIRAAccessTool jira = new JIRAAccessTool(jiraCred.getUrl(), jiraCred.getUrlUsername(), jiraCred.getUrlPassword(),null, jiraCred.getProjectKey(), getJiraCredentialsID());
-		ConfluenceAccessTool confluence = new ConfluenceAccessTool(confCred.getUrl(), confCred.getUrlUsername(), confCred.getUrlPassword(), null);
+		ConfluenceAccessTool confluence = new ConfluenceAccessTool(confCred.getUrl(), confCred.getUrlUsername(), confCred.getUrlPassword(), null, listener);
 
 		String jqlFilter = varReplacer.replace(this.jqlFilter);
 		String spaceKey = varReplacer.replace(this.spaceKey);
@@ -122,9 +119,9 @@ public class ConfluenceReleaseNotesPublisher extends AbstractJIRAConfluenceActio
 			parentPageID = results.get(0);
 		}
 		
-		
-		confluence.createPage(pageTitle, pageHTML, spaceKey, parentPageID);
-			
+		if (!tickets.isEmpty()) {
+			confluence.createPage(pageTitle, pageHTML, spaceKey, parentPageID);
+		}
 
 		confluence.destroy();
 		jira.destroy();
