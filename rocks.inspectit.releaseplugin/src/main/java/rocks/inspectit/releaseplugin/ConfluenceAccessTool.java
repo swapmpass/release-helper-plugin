@@ -1,146 +1,137 @@
 package rocks.inspectit.releaseplugin;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import hudson.model.BuildListener;
+
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import hudson.model.BuildListener;
-
 /**
  * Type encapsulating the REST-API based access to a confluence Server. Allows
  * searching for pages and creating new pages at the moment.
- * 
- * @author Jonas Kunz
  *
+ * @author Jonas Kunz
  */
 
 public class ConfluenceAccessTool {
 
-	/**
-	 * the HTTP connection supporting JSON in and output.
-	 */
-	private JsonHTTPClientWrapper client;
+    /**
+     * the HTTP connection supporting JSON in and output.
+     */
+    private JsonHTTPClientWrapper client;
 
-	private PrintStream logger = null;
+    private PrintStream logger = null;
 
-	/**
-	 * Initializes a new connection with the given connection information.
-	 * @param url the url of confluence
-	 * @param user the username
-	 * @param password the password
-	 * @param proxy the proxy to use for building the connection
-	 */
-	public ConfluenceAccessTool(String url, String user, String password, String proxy, BuildListener listener) {
-		super();
-		logger = listener.getLogger();
-		client = new JsonHTTPClientWrapper(url, user, password, proxy, listener);
-	}
-
-
-
-	/**
-	 * closes the connection.
-	 */
-	public void destroy() {
-		client.destroy();
-	}
+    /**
+     * Initializes a new connection with the given connection information.
+     *
+     * @param url      the url of confluence
+     * @param user     the username
+     * @param password the password
+     * @param proxy    the proxy to use for building the connection
+     */
+    public ConfluenceAccessTool (String url, String user, String password, String proxy, BuildListener listener) {
+        super();
+        logger = listener.getLogger();
+        client = new JsonHTTPClientWrapper(url, user, password, proxy, listener);
+    }
 
 
-	/**
-	 * 
-	 * Queries all pages wioth the given title in the given space.
-	 * 
-	 * @param title
-	 *            the title of the pages to look for
-	 * @param space
-	 *            the key of the space
-	 * @return a list of all IDs of the pages having the given title in the
-	 *         given space
-	 */
-	public List<Long> getPageIDByTitle(String title, String space) {
-		try {
-			
-			Map<String, String> params = new HashMap<>();
-			params.put("spaceKey", space);
-			params.put("title", title);
-			
-			JsonElement je = client.getJson("/rest/api/content", params);
-			
-			JsonArray resultsArray = je.getAsJsonObject().get("results").getAsJsonArray();
+    /**
+     * closes the connection.
+     */
+    public void destroy () {
+        client.destroy();
+    }
 
-			List<Long> results = new ArrayList<Long>();
 
-			for (int i = 0; i < resultsArray.size(); i++) {
-				results.add(resultsArray.get(i).getAsJsonObject().get("id")
-						.getAsLong());
-			}
+    /**
+     * Queries all pages wioth the given title in the given space.
+     *
+     * @param title the title of the pages to look for
+     * @param space the key of the space
+     * @return a list of all IDs of the pages having the given title in the
+     * given space
+     */
+    public List<Long> getPageIDByTitle (String title, String space) {
+        try {
 
-			return results;
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-	}
+            Map<String, String> params = new HashMap<>();
+            params.put("spaceKey", space);
+            params.put("title", title);
 
-	/**
-	 * 
-	 * Creates a new page in the given space.
-	 * 
-	 * @param title
-	 *            the title of the new page
-	 * @param htmlContent
-	 *            the html content of the new page
-	 * @param space
-	 *            the key of the space where the new page shall be placed
-	 * @param parentPageID
-	 *            the id of the parent page, under which the new page should be
-	 *            inserted as child. If parentPageID is null, the new page will
-	 *            be placed at the spaces root.
-	 */
-	public void createPage(String title, String htmlContent, String space, Long parentPageID) {
+            JsonElement je = client.getJson("/rest/api/content", params);
 
-		JsonObject page = new JsonObject();
-		page.addProperty("type", "page");
-		page.addProperty("title", title);
-		if (parentPageID != null) {
-			JsonObject parentPage = new JsonObject();
-			parentPage.addProperty("type", "page");
-			parentPage.addProperty("id", parentPageID);
-			
-			JsonArray ancestors = new JsonArray();
-			ancestors.add(parentPage);
-			page.add("ancestors", ancestors);
-			
-		}
-		JsonObject spaceObj = new JsonObject();
-		spaceObj.addProperty("key", space);
-		page.add("space", spaceObj);
-		
-		JsonObject body = new JsonObject();
-		JsonObject storage = new JsonObject();
-		storage.addProperty("value", htmlContent);
-		storage.addProperty("representation", "storage");
-		body.add("storage", storage);
-		
-		page.add("body", body);
+            JsonArray resultsArray = je.getAsJsonObject().get("results").getAsJsonArray();
 
-		logger.println("HTML CONTENT START");
-		logger.println(htmlContent);
-		logger.println("HTML CONTENT END");
+            List<Long> results = new ArrayList<Long>();
 
-		logger.println("BODY CONTENT START");
-		logger.println(body);
-		logger.println("BODY CONTENT END");
+            for (int i = 0; i < resultsArray.size(); i++) {
+                results.add(resultsArray.get(i).getAsJsonObject().get("id")
+                        .getAsLong());
+            }
 
-		logger.println("PAGE CONTENT START");
-		logger.println(page);
-		logger.println("PAGE CONTENT END");
+            return results;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
 
-		client.postJson("/rest/api/content", page);
-	}
+    /**
+     * Creates a new page in the given space.
+     *
+     * @param title        the title of the new page
+     * @param htmlContent  the html content of the new page
+     * @param space        the key of the space where the new page shall be placed
+     * @param parentPageID the id of the parent page, under which the new page should be
+     *                     inserted as child. If parentPageID is null, the new page will
+     *                     be placed at the spaces root.
+     */
+    public void createPage (String title, String htmlContent, String space, Long parentPageID) {
+
+        JsonObject page = new JsonObject();
+        page.addProperty("type", "page");
+        page.addProperty("title", title);
+        if (parentPageID != null) {
+            JsonObject parentPage = new JsonObject();
+            parentPage.addProperty("type", "page");
+            parentPage.addProperty("id", parentPageID);
+
+            JsonArray ancestors = new JsonArray();
+            ancestors.add(parentPage);
+            page.add("ancestors", ancestors);
+
+        }
+        JsonObject spaceObj = new JsonObject();
+        spaceObj.addProperty("key", space);
+        page.add("space", spaceObj);
+
+        JsonObject body = new JsonObject();
+        JsonObject storage = new JsonObject();
+        storage.addProperty("value", htmlContent);
+        storage.addProperty("representation", "storage");
+        body.add("storage", storage);
+
+        page.add("body", body);
+
+        logger.println("HTML CONTENT START");
+        logger.println(htmlContent);
+        logger.println("HTML CONTENT END");
+
+        logger.println("BODY CONTENT START");
+        logger.println(body);
+        logger.println("BODY CONTENT END");
+
+        logger.println("PAGE CONTENT START");
+        logger.println(page);
+        logger.println("PAGE CONTENT END");
+
+        client.postJson("/rest/api/content", page);
+    }
 
 }
