@@ -217,6 +217,7 @@ public class JIRAAccessTool {
      * @return a list of all issues with this version as affected version.
      */
     public List<Issue> getTicketsByJQL (String jqlQuery) {
+
         SearchResult result = restClient.getSearchClient().searchJql("(" + jqlQuery + ") AND project = \"" + projectKey + "\"").claim();
 
         ArrayList<Issue> issues = new ArrayList<Issue>();
@@ -225,7 +226,6 @@ public class JIRAAccessTool {
         }
 
         return issues;
-
     }
 
     /**
@@ -238,8 +238,9 @@ public class JIRAAccessTool {
 
         Set<String> issueTypesSet = new HashSet<String>();
         for (Issue is : issuesToShow) {
-            issueTypesSet.add(is.getIssueType().getName().replaceAll("&", "and"));
+            issueTypesSet.add(is.getIssueType().getName());
         }
+
         ArrayList<String> sortedIssueTypes = new ArrayList<String>(issueTypesSet);
         sortedIssueTypes.sort(String.CASE_INSENSITIVE_ORDER);
 
@@ -249,15 +250,18 @@ public class JIRAAccessTool {
             resultHtml += "<h2>" + issueType + "</h2>";
             resultHtml += "<ul>";
             for (Issue is : issuesToShow) {
+
                 if (is.getIssueType().getName().equals(issueType)) {
 
-                    resultHtml += "<li>[<a href='" + url + "/browse/" + is.getKey() + "'>" + is.getKey() + "</a>] - " + is.getSummary() + "</li>";
+                    resultHtml += "<li>[<a href='" + url + "/browse/" +
+                            is.getKey() + "'>" +
+                            is.getKey() + "</a>] - " +
+                            is.getSummary().replaceAll("&", "and") + "</li>";
                 }
             }
             resultHtml += "</ul>";
         }
-
-        return resultHtml;
+        return resultHtml.trim();
     }
 
     /**

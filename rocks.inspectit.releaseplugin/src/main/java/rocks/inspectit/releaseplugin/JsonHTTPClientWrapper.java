@@ -4,7 +4,6 @@ import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import hudson.model.BuildListener;
-import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
 import org.apache.http.auth.AuthScope;
@@ -20,7 +19,6 @@ import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.auth.BasicScheme;
 import org.apache.http.impl.client.*;
-import org.apache.http.util.EntityUtils;
 
 import java.io.PrintStream;
 import java.net.URI;
@@ -84,7 +82,6 @@ public class JsonHTTPClientWrapper {
         connect();
     }
 
-
     /**
      * private method for creating the connection.
      */
@@ -98,14 +95,12 @@ public class JsonHTTPClientWrapper {
             clientFactory.setProxy(HttpHost.create(proxy));
         }
         client = clientFactory.setDefaultCredentialsProvider(credsProvider).build();
-
     }
 
 
     public String getProxy () {
         return proxy;
     }
-
 
     /**
      * closes the connection.
@@ -135,33 +130,13 @@ public class JsonHTTPClientWrapper {
             authCache.put(host, basicAuth);
 
             HttpClientContext context = HttpClientContext.create();
+
             context.setCredentialsProvider(credsProvider);
             context.setAuthCache(authCache);
 
-            try {
-                logger.println("Request URI is : " + request.getURI().toString());
-                logger.println("Request body is : " + request.getRequestLine().toString());
-            } catch (Exception e) {
-                //Nothing to do
-            }
-
             HttpResponse response = client.execute(request, context);
 
-            HttpEntity entity = response.getEntity();
-
-            // Read the contents of an entity and return it as a String.
-            String content = EntityUtils.toString(entity);
-
-            try {
-                logger.println("CONTENT START - Status code " + response.getStatusLine().getStatusCode() + " . Reason phrase - " + response.getStatusLine().getReasonPhrase());
-                logger.println(content);
-                logger.println("CONTENT END");
-            } catch (Exception e) {
-                //Nothing to do
-            }
-
-
-            String jsonResponse = content;//new BasicResponseHandler().handleResponse(response);
+            String jsonResponse = new BasicResponseHandler().handleResponse(response);
 
             if (jsonResponse != null) {
                 return new JsonParser().parse(jsonResponse);
@@ -257,8 +232,8 @@ public class JsonHTTPClientWrapper {
         return executeRequest(getReq);
     }
 
-
     public CloseableHttpClient getHttpClient () {
         return client;
     }
+
 }

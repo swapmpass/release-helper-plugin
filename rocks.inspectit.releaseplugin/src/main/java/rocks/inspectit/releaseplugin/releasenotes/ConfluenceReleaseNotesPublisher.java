@@ -81,7 +81,6 @@ public class ConfluenceReleaseNotesPublisher extends AbstractJIRAConfluenceActio
     @Override
     public boolean perform (AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
 
-
         StrSubstitutor varReplacer = getVariablesSubstitutor(build, listener);
         PrintStream logger = listener.getLogger();
 

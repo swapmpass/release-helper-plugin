@@ -119,18 +119,6 @@ public class ConfluenceAccessTool {
 
         page.add("body", body);
 
-        logger.println("HTML CONTENT START");
-        logger.println(htmlContent);
-        logger.println("HTML CONTENT END");
-
-        logger.println("BODY CONTENT START");
-        logger.println(body);
-        logger.println("BODY CONTENT END");
-
-        logger.println("PAGE CONTENT START");
-        logger.println(page);
-        logger.println("PAGE CONTENT END");
-
         client.postJson("/rest/api/content", page);
     }
 
